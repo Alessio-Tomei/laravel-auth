@@ -10962,3 +10962,12 @@ a.text-dark:focus {
   }
 }
 
+#ms_delete-btn {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ms_bold {
+  font-weight: bold;
+}
+

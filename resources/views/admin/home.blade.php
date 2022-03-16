@@ -17,6 +17,7 @@
                     {{ __('You are logged in!') }}
                 </div>
             </div>
+            <a href="{{route("admin.posts.index")}}"><button type="button" class="btn btn-primary">Visualizza i posts</button></a>
         </div>
     </div>
 </div>

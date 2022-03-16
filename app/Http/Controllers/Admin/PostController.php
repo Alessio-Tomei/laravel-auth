@@ -4,10 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use App\Post;
+
 
 class PostController extends Controller
 {
+    protected $validations = [
+        'title' => 'required|string|max:255',
+        'content' => 'required|string|max:65535',
+        'published' => 'integer|min:0|max:1'
+    ];
     /**
      * Display a listing of the resource.
      *
@@ -26,7 +33,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.posts.create');
     }
 
     /**
@@ -37,51 +44,93 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // $request->validate([
+        //     'title' => 'required|string|max:255',
+        //     'content' => 'required|string|max:65535',
+        //     'published' => 'integer|min:0|max:1',
+        // ]);
+
+        $request->validate($this->validations);
+
+        $data = $request->all();
+
+        $tempSlug = Str::of($data['title'])->slug("-");
+        $count = 1;
+        while (Post::where('slug', $tempSlug)->first()) {
+            $tempSlug = Str::of($data['title'])->slug("-") . '-' . $count;
+            $count ++;
+        }
+
+        $data['slug'] = $tempSlug;
+     
+        $newPost = Post::create($data);
+
+        return redirect()->route('admin.posts.show', $newPost->id);
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function show($id)
+    public function show(Post $post)
     {
-        //
+        return view('admin.posts.show', compact('post'));
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  \App\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
-        //
+        return view('admin.posts.edit', compact('post'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  \App\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(Request $request, Post $post)
     {
-        //
+        $request->validate($this->validations);
+
+        $data = $request->all();
+
+        if ($post->title == $data['title']) {
+            $tempSlug = $post->slug;
+        } else {
+            $tempSlug = Str::of($data['title'])->slug("-");
+            $count = 1;
+            while (Post::where('slug', $tempSlug)->where('id', '!=', $post->id)->first()) {
+                $tempSlug = Str::of($data['title'])->slug("-") . '-' . $count;
+                $count ++;
+            }
+        }
+
+        $data['slug'] = $tempSlug;
+
+        $post->update($data);
+
+        return redirect()->route('admin.posts.show', $post->id);
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  \App\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Post $post)
     {
-        //
+        $post->delete();
+
+        return redirect()->route('admin.posts.index');
     }
 }
